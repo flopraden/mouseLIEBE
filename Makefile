@@ -6,8 +6,8 @@
 # Copyright: (c) 2008 by OBJECTIVE DEVELOPMENT Software GmbH
 # License: GNU GPL v2 (see License.txt), GNU GPL v3 or proprietary (CommercialLicense.txt)
 
-DEVICE  = attiny45
-F_CPU   = 16500000 # in Hz
+DEVICE  = attiny85
+F_CPU   = 16000000 # in Hz
 FUSE_L  = 0xe1
 FUSE_H  = 0xdd
 AVRDUDE = avrdude -c avrisp2 -p $(DEVICE) -P usb
