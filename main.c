@@ -129,10 +129,8 @@ static report_t reportBuffer;
 static uchar    idleRate;   /* repeat rate for keyboards, never used for mice */
 
 
-static void advance_mouse(void)
+static void advance_mouse(uint8_t phase)
 {
-    static uchar phase = 0;
-    if (phase > 85) phase = 0;
     if (phase > 43){
         reportBuffer.dx =  heart_table[86-phase].x;
         reportBuffer.dy =  heart_table[86-phase].y;
@@ -225,6 +223,8 @@ int __attribute__((noreturn)) main(void)
     int   led_timer   = 0;
     uchar led_counter = 0;
 
+    uint8_t phase = 0;
+
     wdt_enable(WDTO_1S);
     /* Even if you don't use the watchdog, turn it off here. On newer devices,
      * the status of the watchdog (on/off, period) is PRESERVED OVER RESET!
@@ -248,12 +248,9 @@ int __attribute__((noreturn)) main(void)
     sei();
 
     /* usbflattiny code */
-    DDRB |= (1<<PORTB5) | (1<<PORTB4) | (1<<PORTB3) | (1<<PORTB1);
+    DDRB |= (1<<PORTB3);
 
-    PORTB |= (1<<PORTB5);
     PORTB |= (1<<PORTB3);
-    PORTB &= ~(1<<PORTB4);
-    PORTB &= ~(1<<PORTB1);
     /* /usbflattiny code */
 
     DBG1(0x01, 0, 0);       /* debug output: main loop starts */
@@ -263,7 +260,9 @@ int __attribute__((noreturn)) main(void)
         usbPoll();
         if(usbInterruptIsReady()){
             /* called after every poll of the interrupt endpoint */
-            advance_mouse();
+            advance_mouse(phase);
+            phase++;
+            if (phase > 85) phase = 0;
             DBG1(0x03, 0, 0);   /* debug output: interrupt report prepared */
             usbSetInterrupt((void *)&reportBuffer, sizeof(reportBuffer));
         }
@@ -273,10 +272,7 @@ int __attribute__((noreturn)) main(void)
         {
             led_counter++;
             if (led_counter == 0x10) led_counter = 0;
-            if (led_counter & 0x1) PORTB |= (1<<PORTB4); else PORTB &= ~(1<<PORTB4);
             if (led_counter & 0x2) PORTB |= (1<<PORTB3); else PORTB &= ~(1<<PORTB3);
-            if (led_counter & 0x4) PORTB |= (1<<PORTB5); else PORTB &= ~(1<<PORTB5);
-            if (led_counter & 0x8) PORTB |= (1<<PORTB1); else PORTB &= ~(1<<PORTB1);
             led_timer = 0;
         }
         /* /usbflattiny code */
