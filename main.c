@@ -26,6 +26,8 @@ publish any hardware using these IDs! This is for demonstration only!
 #include "usbdrv.h"
 #include "oddebug.h"        /* This is also an example for using debug macros */
 
+#define BR_START 160
+
 /* ----------------------------- USB interface ----------------------------- */
 
 PROGMEM const char usbHidReportDescriptor[52] = { /* USB report descriptor, size must match usbconfig.h */
@@ -149,10 +151,10 @@ usbMsgLen_t usbFunctionSetup(uchar data[8])
         DBG1(0x50, &rq->bRequest, 1);   /* debug output: print our request */
         if(rq->bRequest == USBRQ_HID_GET_REPORT){  /* wValue: ReportType (highbyte), ReportID (lowbyte) */
             /* we only have one report type, so don't look at wValue */
-            usbMsgPtr = (void *)&reportBuffer;
+            usbMsgPtr = (short unsigned int)&reportBuffer;
             return sizeof(reportBuffer);
         }else if(rq->bRequest == USBRQ_HID_GET_IDLE){
-            usbMsgPtr = &idleRate;
+            usbMsgPtr = (short unsigned int)&idleRate;
             return 1;
         }else if(rq->bRequest == USBRQ_HID_SET_IDLE){
             idleRate = rq->wValue.bytes[1];
@@ -212,10 +214,6 @@ both regions.
 
 int __attribute__((noreturn)) main(void)
 {
-    int   led_timer   = 0;
-    uchar led_counter = 0;
-
-#define BR_START 160
 
     uint8_t phase = 0;
     uint8_t brightness = BR_START;
